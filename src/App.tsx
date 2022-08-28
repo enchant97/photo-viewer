@@ -4,8 +4,10 @@ import { appDir } from '@tauri-apps/api/path';
 import { readDir, readBinaryFile } from '@tauri-apps/api/fs';
 
 import "./App.css";
+import { Link, useNavigate, useParams } from "solid-app-router";
 
 function Img(props: any) {
+  let navigate = useNavigate();
   let [srcUrl, setSrcUrl] = createSignal("");
 
   createEffect(async () => {
@@ -14,7 +16,29 @@ function Img(props: any) {
     setSrcUrl(URL.createObjectURL(blob));
   });
 
-  return <img src={srcUrl()} alt="" />;
+  function onClick() {
+    let encoded = btoa(props.path)
+    navigate("/single/" + encoded);
+  }
+
+  return <img src={srcUrl()} alt="" onclick={() => onClick()} />;
+}
+
+export function SingleImage() {
+  const { path } = useParams();
+  const [actualPath, setActualPath] = createSignal("");
+
+  createEffect(() => {
+    setActualPath(atob(path));
+  })
+
+  return (
+    <>
+      <h1>Single</h1>
+      <Link href="/">Back</Link>
+      <Img path={actualPath()}></Img>
+    </>
+  );
 }
 
 function App() {
@@ -42,7 +66,7 @@ function App() {
       var new_dirs = [];
       for (let entry of entries) {
         if (entry.children === undefined) {
-          if ((entry.path.toLowerCase()).endsWith(".jpg")){
+          if ((entry.path.toLowerCase()).endsWith(".jpg")) {
             new_files.push(entry.path);
           }
         } else {
