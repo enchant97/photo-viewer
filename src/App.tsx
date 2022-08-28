@@ -1,44 +1,16 @@
-import { createEffect, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { open } from '@tauri-apps/api/dialog';
 import { appDir } from '@tauri-apps/api/path';
-import { readDir, readBinaryFile } from '@tauri-apps/api/fs';
+import { readDir } from '@tauri-apps/api/fs';
 
 import "./App.css";
-import { Link, useNavigate, useParams } from "solid-app-router";
 
-function Img(props: any) {
-  let navigate = useNavigate();
-  let [srcUrl, setSrcUrl] = createSignal("");
-
-  createEffect(async () => {
-    let contents = await readBinaryFile(props.path);
-    let blob = new Blob([contents], { type: "image/jpeg" });
-    setSrcUrl(URL.createObjectURL(blob));
-  });
-
-  function onClick() {
-    let encoded = btoa(props.path)
-    navigate("/single/" + encoded);
-  }
-
-  return <img src={srcUrl()} alt="" onclick={() => onClick()} />;
+function img_resource_uri(path: string) {
+  return "reqimg://" + location.hostname + "/" + encodeURIComponent(path);
 }
 
-export function SingleImage() {
-  const { path } = useParams();
-  const [actualPath, setActualPath] = createSignal("");
-
-  createEffect(() => {
-    setActualPath(atob(path));
-  })
-
-  return (
-    <>
-      <h1>Single</h1>
-      <Link href="/">Back</Link>
-      <Img path={actualPath()}></Img>
-    </>
-  );
+function Img(props: any) {
+  return <img src={img_resource_uri(props.path)} alt="" />;
 }
 
 function App() {

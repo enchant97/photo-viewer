@@ -3,14 +3,31 @@
     windows_subsystem = "windows"
 )]
 
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+use std::fs::read;
+use std::path::PathBuf;
+use tauri::{
+    http::{Request, ResponseBuilder},
+    AppHandle,
+};
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
+        .register_uri_scheme_protocol("reqimg", move |app: &AppHandle, request: &Request| {
+            let not_found_response = ResponseBuilder::new().status(404).body(vec![]);
+
+            let file_path = request.uri();
+            let file_path = file_path.strip_prefix("reqimg://localhost/").unwrap();
+            let file_path = urlencoding::decode(file_path).expect("UTF-8").into_owned();
+
+            let file_path = PathBuf::from(file_path);
+
+            if request.method() != "GET" || !file_path.is_file() {
+                return not_found_response;
+            }
+
+            let content = read(file_path).unwrap();
+            ResponseBuilder::new().status(200).body(content)
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
