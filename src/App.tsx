@@ -66,11 +66,11 @@ function App() {
         </For>
       </ul>
       <h2>Files</h2>
-      <ul>
+      <div class="images">
         <For each={files()}>
-          {(path) => <li><Img path={path}></Img></li>}
+          {(path) => <Img path={path}></Img>}
         </For>
-      </ul>
+      </div>
     </>
   );
 }
