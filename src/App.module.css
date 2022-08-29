@@ -1,7 +1,7 @@
 .header {
     position: fixed;
     width: 100%;
-    background-color: black;
+    background-color: #777777;
     height: 160px;
 }
 
@@ -28,7 +28,7 @@
 .footer {
     position: fixed;
     width: 100%;
-    background-color: black;
+    background-color: #777777;
     bottom: 0;
     height: 50px;
 }
