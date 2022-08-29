@@ -5,6 +5,7 @@ import { readDir } from '@tauri-apps/api/fs';
 import { Link, useNavigate, useParams } from "solid-app-router";
 import { to_b64, from_b64 } from "./core/base64";
 import "./App.css";
+import { isSupportedExtension } from "./core/helpers";
 
 function img_resource_uri(path: string) {
   return "reqimg://" + location.hostname + "/" + to_b64(path);
@@ -57,7 +58,7 @@ function App() {
       var new_dirs = [];
       for (let entry of entries) {
         if (entry.children === undefined) {
-          if ((entry.path.toLowerCase()).endsWith(".jpg")) {
+          if (isSupportedExtension(entry.path)) {
             new_files.push(entry.path);
           }
         } else {
