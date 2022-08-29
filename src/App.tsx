@@ -4,8 +4,8 @@ import { appDir } from '@tauri-apps/api/path';
 import { readDir } from '@tauri-apps/api/fs';
 import { Link, useNavigate, useParams } from "solid-app-router";
 import { to_b64, from_b64 } from "./core/base64";
-import "./App.css";
 import { isSupportedExtension } from "./core/helpers";
+import styles from "./App.module.css";
 
 function img_resource_uri(path: string) {
   return "reqimg://" + location.hostname + "/" + to_b64(path);
@@ -72,21 +72,26 @@ function App() {
 
   return (
     <>
-      <h1>Photo Viewer</h1>
-      <button onClick={() => handleDirPickClick()}>Pick Folder</button>
-      <p>{dir}</p>
-      <h2>Directories</h2>
-      <ul>
-        <For each={dirs()}>
-          {(path) => <li>{path}</li>}
-        </For>
-      </ul>
-      <h2>Files</h2>
-      <div class="images">
-        <For each={files()}>
-          {(path) => <Img path={path}></Img>}
-        </For>
+      <div class={styles.header}>
+        <h1>Photo Viewer</h1>
+        <button onClick={() => handleDirPickClick()}>Pick Folder</button>
+        <p>{dir}</p>
       </div>
+      <div class={styles.gallery}>
+        <h2>Directories</h2>
+        <ul>
+          <For each={dirs()}>
+            {(path) => <li>{path}</li>}
+          </For>
+        </ul>
+        <h2>Files</h2>
+        <div class={styles.images}>
+          <For each={files()}>
+            {(path) => <Img path={path}></Img>}
+          </For>
+        </div>
+      </div>
+      <div class={styles.footer}><p>a footer...</p></div>
     </>
   );
 }
