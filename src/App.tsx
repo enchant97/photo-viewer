@@ -2,15 +2,34 @@ import { createSignal, For } from "solid-js";
 import { open } from '@tauri-apps/api/dialog';
 import { appDir } from '@tauri-apps/api/path';
 import { readDir } from '@tauri-apps/api/fs';
-
+import { Link, useNavigate, useParams } from "solid-app-router";
+import { to_b64, from_b64 } from "./core/base64";
 import "./App.css";
 
 function img_resource_uri(path: string) {
-  return "reqimg://" + location.hostname + "/" + encodeURIComponent(path);
+  return "reqimg://" + location.hostname + "/" + to_b64(path);
 }
 
 function Img(props: any) {
-  return <img src={img_resource_uri(props.path)} alt="" />;
+  let navigate = useNavigate();
+
+  function onClick() {
+    navigate("/single/" + to_b64(props.path));
+  }
+
+  return <img src={img_resource_uri(props.path)} alt="" onclick={() => onClick()} />;
+}
+
+export function SingleImage() {
+  const { path } = useParams();
+
+  return (
+    <>
+      <h1>Single</h1>
+      <Link href="/">Back</Link>
+      <Img path={from_b64(path)}></Img>
+    </>
+  );
 }
 
 function App() {

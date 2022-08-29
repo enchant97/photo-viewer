@@ -1926,11 +1926,11 @@ dependencies = [
 name = "photo-viewer"
 version = "0.0.0"
 dependencies = [
+ "base64",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
- "urlencoding",
 ]
 
 [[package]]
@@ -3123,12 +3123,6 @@ dependencies = [
  "percent-encoding",
  "serde",
 ]
-
-[[package]]
-name = "urlencoding"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68b90931029ab9b034b300b797048cf23723400aa757e8a2bfb9d748102f9821"
 
 [[package]]
 name = "utf-8"
