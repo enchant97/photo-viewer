@@ -18,7 +18,7 @@ function Img(props: any) {
     navigate("/single/" + to_b64(props.path));
   }
 
-  return <img src={img_resource_uri(props.path)} alt="" onclick={() => onClick()} />;
+  return <img src={img_resource_uri(props.path)} alt="" style={"width:" + props.size + "%"} onclick={onClick} />;
 }
 
 export function SingleImage() {
@@ -28,7 +28,7 @@ export function SingleImage() {
     <>
       <h1>Single</h1>
       <Link href="/">Back</Link>
-      <Img path={from_b64(path)}></Img>
+      <Img path={from_b64(path)} size={100}></Img>
     </>
   );
 }
@@ -37,6 +37,8 @@ function App() {
   let [dir, setDir] = createSignal("");
   let [files, setFiles] = createSignal<string[]>([]);
   let [dirs, setDirs] = createSignal<string[]>([]);
+  let [rowCount, setRowCount] = createSignal<number>(3);
+  let [imageSize, setImageSize] = createSignal<number>(32);
 
   async function handleDirPickClick() {
     let selected = await open({
@@ -48,6 +50,11 @@ function App() {
       setDir(selected);
       await refreshGrid();
     }
+  }
+
+  function handleRowCountChange(event: any) {
+    setRowCount(event.target.value);
+    setImageSize(100 / rowCount() - 2);
   }
 
   async function refreshGrid() {
@@ -87,11 +94,18 @@ function App() {
         <h2>Files</h2>
         <div class={styles.images}>
           <For each={files()}>
-            {(path) => <Img path={path}></Img>}
+            {(path) => <Img path={path} size={imageSize()}></Img>}
           </For>
         </div>
       </div>
-      <div class={styles.footer}><p>a footer...</p></div>
+      <div class={styles.footer}>
+        <label for="gallery-row-count">Per Row</label>
+        <input type="range" min="2" max="12" step="1" id="gallery-row-count"
+          value={rowCount()}
+          onInput={handleRowCountChange}
+          title={rowCount() + " Per Row"}
+        />
+      </div>
     </>
   );
 }
