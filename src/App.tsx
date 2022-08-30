@@ -1,11 +1,11 @@
-import { createSignal, For } from "solid-js";
+import { createEffect, createSignal, For } from "solid-js";
 import { open } from '@tauri-apps/api/dialog';
 import { appDir } from '@tauri-apps/api/path';
-import { readDir } from '@tauri-apps/api/fs';
 import { Link, useNavigate, useParams } from "solid-app-router";
 import { to_b64, from_b64 } from "./core/base64";
 import { isSupportedExtension } from "./core/helpers";
 import styles from "./App.module.css";
+import { lsPath } from "./core/file_system";
 
 function img_resource_uri(path: string) {
   return "reqimg://" + location.hostname + "/" + to_b64(path);
@@ -48,7 +48,6 @@ function App() {
     });
     if (!Array.isArray(selected) && selected !== null) {
       setDir(selected);
-      await refreshGrid();
     }
   }
 
@@ -57,25 +56,20 @@ function App() {
     setImageSize(100 / rowCount() - 2);
   }
 
-  async function refreshGrid() {
-    let root_dir = dir();
-    if (root_dir) {
-      let entries = await readDir(root_dir, { recursive: false });
-      var new_files = [];
-      var new_dirs = [];
-      for (let entry of entries) {
-        if (entry.children === undefined) {
-          if (isSupportedExtension(entry.path)) {
-            new_files.push(entry.path);
-          }
-        } else {
-          new_dirs.push(entry.path)
-        }
+  async function refreshGrid(root_dir: string) {
+    let entries = await lsPath(root_dir);
+    var new_files = [];
+    var new_dirs = entries.directories;
+    for (let entry of entries.files) {
+      if (isSupportedExtension(entry.name)) {
+        new_files.push(entry.name);
       }
-      setFiles(new_files);
-      setDirs(new_dirs);
     }
+    setFiles(new_files);
+    setDirs(new_dirs);
   }
+
+  createEffect(async () => { if (dir()) { await refreshGrid(dir()) } });
 
   return (
     <>
@@ -94,7 +88,7 @@ function App() {
         <h2>Files</h2>
         <div class={styles.images}>
           <For each={files()}>
-            {(path) => <Img path={path} size={imageSize()}></Img>}
+            {(path) => <Img path={dir() + "/" + path} size={imageSize()}></Img>}
           </For>
         </div>
       </div>
