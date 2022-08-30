@@ -37,7 +37,7 @@ const GalleryImage: Component<GalleryImageProps> = (props) => {
 
   return (
     <ObservedImage
-      src={createResourceURI(props.imagePath)}
+      src={createResourceURI(props.imagePath, false, 400)}
       alt="" style={"width: " + props.width}
       onclick={handleOnClick}
     />);

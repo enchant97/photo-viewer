@@ -3,15 +3,19 @@
     windows_subsystem = "windows"
 )]
 
+use magick_rust::{magick_wand_genesis, MagickWand};
 use serde::Serialize;
 use std::error::Error;
 use std::fs::{read, read_dir};
 use std::path::PathBuf;
+use std::sync::Once;
 use tauri::{
     http::{Request, Response, ResponseBuilder},
     AppHandle,
 };
 use url::Url;
+
+static MAGIC_START: Once = Once::new();
 
 #[derive(Debug, Serialize)]
 struct File {
@@ -45,6 +49,31 @@ fn ls_path(root_path: PathBuf) -> Directory {
     Directory { directories, files }
 }
 
+struct ImgReqOptions {
+    resize: Option<usize>,
+}
+
+fn pass_url_image_options(url: Url) -> ImgReqOptions {
+    let mut resize: Option<usize> = None;
+
+    for (key, value) in url.query_pairs() {
+        if key.to_owned().to_string().eq("s") {
+            resize = value.to_owned().to_string().parse::<usize>().ok();
+        }
+    }
+
+    ImgReqOptions { resize }
+}
+
+fn create_img_thumbnail(file_path: PathBuf, new_size: usize) -> Vec<u8> {
+    let wand = MagickWand::new();
+    wand.read_image(file_path.as_os_str().to_str().unwrap())
+        .unwrap();
+    wand.thumbnail_image(new_size, new_size);
+    let blob = wand.write_image_blob("jpeg").unwrap();
+    blob
+}
+
 fn handle_register_uri_scheme_req_img(
     _app: &AppHandle,
     request: &Request,
@@ -57,8 +86,8 @@ fn handle_register_uri_scheme_req_img(
     }
 
     // Converts reqimg://localhost/<base64> into a PathBuf
-    let file_path = Url::parse(request.uri())?;
-    let file_path = file_path
+    let parsed_url = Url::parse(request.uri())?;
+    let file_path = parsed_url
         .path_segments()
         .map(|c| c.collect::<Vec<_>>())
         .unwrap();
@@ -72,11 +101,21 @@ fn handle_register_uri_scheme_req_img(
         return not_found_response;
     }
 
-    let content = read(file_path).unwrap();
+    let options = pass_url_image_options(parsed_url);
+
+    let content = match options.resize {
+        None => read(file_path).unwrap(),
+        Some(resize) => create_img_thumbnail(file_path, resize),
+    };
+
     ResponseBuilder::new().status(200).body(content)
 }
 
 fn main() {
+    MAGIC_START.call_once(|| {
+        magick_wand_genesis();
+    });
+
     tauri::Builder::default()
         .register_uri_scheme_protocol("reqimg", handle_register_uri_scheme_req_img)
         .invoke_handler(tauri::generate_handler![ls_path])

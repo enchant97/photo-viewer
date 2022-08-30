@@ -12,7 +12,7 @@ export function isSupportedExtension(path: string) {
   return false;
 };
 
-export function createResourceURI(path: string, skipPathEncode: boolean = false) {
+export function createResourceURI(path: string, skipPathEncode: boolean = false, size: number | null = null) {
   let encodedPath;
   switch (skipPathEncode) {
     case true:
@@ -22,5 +22,7 @@ export function createResourceURI(path: string, skipPathEncode: boolean = false)
       encodedPath = to_b64(path);
       break;
   }
-  return "reqimg://" + location.hostname + "/" + encodedPath;
+  let url = "reqimg://" + location.hostname + "/" + encodedPath;
+  if (size) { url = url + "?s=" + size.toString() }
+  return url;
 }
