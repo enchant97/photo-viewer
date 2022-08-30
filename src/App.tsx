@@ -1,25 +1,12 @@
-import { createEffect, createSignal, For } from "solid-js";
+import { createEffect, createSignal } from "solid-js";
 import { open } from '@tauri-apps/api/dialog';
 import { appDir } from '@tauri-apps/api/path';
 import { Link, useNavigate, useParams } from "solid-app-router";
-import { to_b64, from_b64 } from "./core/base64";
-import { isSupportedExtension } from "./core/helpers";
+import { to_b64 } from "./core/base64";
 import styles from "./App.module.css";
-import { lsPath } from "./core/file_system";
-
-function img_resource_uri(path: string) {
-  return "reqimg://" + location.hostname + "/" + to_b64(path);
-}
-
-function Img(props: any) {
-  let navigate = useNavigate();
-
-  function onClick() {
-    navigate("/single/" + to_b64(props.path));
-  }
-
-  return <img src={img_resource_uri(props.path)} alt="" style={"width:" + props.size + "%"} onclick={onClick} />;
-}
+import { Directory, lsPath } from "./core/file_system";
+import Gallery from "./components/Gallery";
+import { createResourceURI } from "./core/helpers";
 
 export function SingleImage() {
   const { path } = useParams();
@@ -28,76 +15,66 @@ export function SingleImage() {
     <>
       <h1>Single</h1>
       <Link href="/">Back</Link>
-      <Img path={from_b64(path)} size={100}></Img>
+      <img src={createResourceURI(path, true)} alt="" />
     </>
   );
 }
 
 function App() {
-  let [dir, setDir] = createSignal("");
-  let [files, setFiles] = createSignal<string[]>([]);
-  let [dirs, setDirs] = createSignal<string[]>([]);
-  let [rowCount, setRowCount] = createSignal<number>(3);
-  let [imageSize, setImageSize] = createSignal<number>(32);
+  let navigate = useNavigate();
+  let [rootPath, setRootPath] = createSignal("");
+  let [columnCount, setColumnCount] = createSignal<number>(3);
+  let [dirContents, setDirContents] = createSignal<Directory>();
 
-  async function handleDirPickClick() {
+  const refreshGrid = async (rootPath: string) => {
+    setDirContents(await lsPath(rootPath));
+  }
+
+  const handleDirPickClick = async () => {
     let selected = await open({
       directory: true,
       multiple: false,
       defaultPath: await appDir(),
     });
     if (!Array.isArray(selected) && selected !== null) {
-      setDir(selected);
+      setRootPath(selected);
     }
   }
 
-  function handleRowCountChange(event: any) {
-    setRowCount(event.target.value);
-    setImageSize(100 / rowCount() - 2);
+  const handleColumnCountChange = (event: any) => {
+    setColumnCount(event.target.value);
   }
 
-  async function refreshGrid(root_dir: string) {
-    let entries = await lsPath(root_dir);
-    var new_files = [];
-    var new_dirs = entries.directories;
-    for (let entry of entries.files) {
-      if (isSupportedExtension(entry.name)) {
-        new_files.push(entry.name);
-      }
-    }
-    setFiles(new_files);
-    setDirs(new_dirs);
+  const handleImageClick = (imagePath: string) => {
+    navigate("/single/" + to_b64(imagePath));
   }
 
-  createEffect(async () => { if (dir()) { await refreshGrid(dir()) } });
+  createEffect(async () => {
+    let newRootPath = rootPath();
+    if (newRootPath) { await refreshGrid(newRootPath) }
+  })
 
   return (
     <>
       <div class={styles.header}>
         <h1>Photo Viewer</h1>
         <button onClick={() => handleDirPickClick()}>Pick Folder</button>
-        <p>{dir}</p>
+        <p>{rootPath}</p>
       </div>
-      <div class={styles.gallery}>
-        <h2>Directories</h2>
-        <ul>
-          <For each={dirs()}>
-            {(path) => <li>{path}</li>}
-          </For>
-        </ul>
-        <h2>Files</h2>
-        <div class={styles.images}>
-          <For each={files()}>
-            {(path) => <Img path={dir() + "/" + path} size={imageSize()}></Img>}
-          </For>
-        </div>
+      <div class={styles.main}>
+        <Gallery
+          rootPath={rootPath()}
+          columnsPerRow={columnCount()}
+          contents={dirContents()}
+          onImageClick={handleImageClick}
+        />
       </div>
       <div class={styles.footer}>
         <label for="gallery-row-count">Per Row</label>
         <input type="range" min="2" max="12" step="1" id="gallery-row-count"
-          value={rowCount()}
-          onInput={handleRowCountChange}
-          title={rowCount() + " Per Row"}
+          value={columnCount()}
+          onInput={handleColumnCountChange}
+          title={columnCount() + " Per Row"}
         />
       </div>
     </>

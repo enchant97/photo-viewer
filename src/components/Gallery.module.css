@@ -1,0 +1,18 @@
+.gallery {
+    max-width: 2000px;
+    margin: auto;
+}
+
+.gallery .images {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.gallery .images img {
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    border-radius: 12px;
+}
