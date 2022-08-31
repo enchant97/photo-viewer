@@ -1,4 +1,4 @@
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, Show } from "solid-js";
 import { open } from '@tauri-apps/api/dialog';
 import { appDir } from '@tauri-apps/api/path';
 import { Link, useNavigate, useParams } from "solid-app-router";
@@ -62,12 +62,14 @@ function App() {
         <p>{rootPath}</p>
       </div>
       <div class={styles.main}>
-        <Gallery
-          rootPath={rootPath()}
-          columnsPerRow={columnCount()}
-          contents={dirContents()}
-          onImageClick={handleImageClick}
-        />
+        <Show when={rootPath() !== ""}>
+          <Gallery
+            rootPath={rootPath()}
+            columnsPerRow={columnCount()}
+            contents={dirContents()}
+            onImageClick={handleImageClick}
+          />
+        </Show>
       </div>
       <div class={styles.footer}>
         <label for="gallery-row-count">Per Row</label>
