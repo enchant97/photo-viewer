@@ -17,6 +17,8 @@ use url::Url;
 
 static MAGIC_START: Once = Once::new();
 
+static SUPPORTED_EXT: &'static [&str] = &["jpeg", "jpg", "png"];
+
 #[derive(Debug, Serialize)]
 struct File {
     /// filename including extension
@@ -31,6 +33,18 @@ struct Directory {
     files: Vec<File>,
 }
 
+/// Check whether extension is supported
+fn supported_img(file_ext: String) -> bool {
+    for ext in SUPPORTED_EXT {
+        if file_ext.eq(ext) {
+            return true;
+        }
+    }
+    false
+}
+
+/// Request list of directory,
+/// returning any sub directories and supported files
 #[tauri::command]
 fn ls_path(root_path: PathBuf) -> Directory {
     // FIXME remove all unwrap usage
@@ -43,7 +57,10 @@ fn ls_path(root_path: PathBuf) -> Directory {
         if path.is_dir() {
             directories.push(file_name);
         } else {
-            files.push(File { name: file_name });
+            let file_ex = path.extension().unwrap().to_str().unwrap().to_string().to_lowercase();
+            if supported_img(file_ex) {
+                files.push(File { name: file_name });
+            }
         }
     }
     Directory { directories, files }
