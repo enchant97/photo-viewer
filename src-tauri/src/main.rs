@@ -3,19 +3,18 @@
     windows_subsystem = "windows"
 )]
 
-use magick_rust::{magick_wand_genesis, MagickWand};
 use serde::Serialize;
 use std::error::Error;
 use std::fs::{read, read_dir};
 use std::path::PathBuf;
-use std::sync::Once;
 use tauri::{
     http::{Request, Response, ResponseBuilder},
     AppHandle,
 };
 use url::Url;
 
-static MAGIC_START: Once = Once::new();
+mod thumbnail;
+use thumbnail::create_img_thumbnail;
 
 static SUPPORTED_EXT: &'static [&str] = &["jpeg", "jpg", "png"];
 
@@ -57,7 +56,13 @@ fn ls_path(root_path: PathBuf) -> Directory {
         if path.is_dir() {
             directories.push(file_name);
         } else {
-            let file_ex = path.extension().unwrap().to_str().unwrap().to_string().to_lowercase();
+            let file_ex = path
+                .extension()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .to_string()
+                .to_lowercase();
             if supported_img(file_ex) {
                 files.push(File { name: file_name });
             }
@@ -67,28 +72,19 @@ fn ls_path(root_path: PathBuf) -> Directory {
 }
 
 struct ImgReqOptions {
-    resize: Option<usize>,
+    resize: Option<u32>,
 }
 
 fn pass_url_image_options(url: Url) -> ImgReqOptions {
-    let mut resize: Option<usize> = None;
+    let mut resize: Option<u32> = None;
 
     for (key, value) in url.query_pairs() {
         if key.to_owned().to_string().eq("s") {
-            resize = value.to_owned().to_string().parse::<usize>().ok();
+            resize = value.to_owned().to_string().parse::<u32>().ok();
         }
     }
 
     ImgReqOptions { resize }
-}
-
-fn create_img_thumbnail(file_path: PathBuf, new_size: usize) -> Vec<u8> {
-    let wand = MagickWand::new();
-    wand.read_image(file_path.as_os_str().to_str().unwrap())
-        .unwrap();
-    wand.thumbnail_image(new_size, new_size);
-    let blob = wand.write_image_blob("jpeg").unwrap();
-    blob
 }
 
 fn handle_register_uri_scheme_req_img(
@@ -129,10 +125,6 @@ fn handle_register_uri_scheme_req_img(
 }
 
 fn main() {
-    MAGIC_START.call_once(|| {
-        magick_wand_genesis();
-    });
-
     tauri::Builder::default()
         .register_uri_scheme_protocol("reqimg", handle_register_uri_scheme_req_img)
         .invoke_handler(tauri::generate_handler![ls_path])

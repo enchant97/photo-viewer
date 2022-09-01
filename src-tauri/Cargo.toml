@@ -8,8 +8,6 @@ repository = ""
 edition = "2021"
 rust-version = "1.57"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [build-dependencies]
 tauri-build = { version = "1.0.0", features = [] }
 
@@ -19,13 +17,15 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.0.0", features = ["api-all"] }
 base64 = "0.13"
 url = "2.2"
-# bindings to 'imagemagik'
-magick_rust = "0.16"
+image = { version = "0.24", optional = true }
+magick_rust = { version = "0.16", optional = true }
 
 [features]
-# by default Tauri runs in production mode
 # when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is an URL
-default = [ "custom-protocol" ]
-# this feature is used used for production builds where `devPath` points to the filesystem
-# DO NOT remove this
+default = [ "custom-protocol", "thumbnail_magick" ]
+# DO NOT remove this, used used for production builds where `devPath` points to the filesystem
 custom-protocol = [ "tauri/custom-protocol" ]
+# Supported image thumbnail libaries,
+# Rust native feature is prefered as it does not require further setup
+thumbnail_magick = [ "dep:magick_rust" ]
+thumbnail_native = [ "dep:image" ]
