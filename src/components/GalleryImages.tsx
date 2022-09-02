@@ -2,6 +2,7 @@ import { Component, For } from "solid-js";
 import GalleryImage from "./GalleryImage";
 import { File } from "../core/file_system";
 import styles from "./Gallery.module.css";
+import { combineRootPath } from "../core/helpers";
 
 export type GalleryImagesProps = {
   rootPath: string
@@ -17,7 +18,7 @@ const GalleryImages: Component<GalleryImagesProps> = (props) => {
       <For each={props.fileContentsToShow}>
         {(file) =>
           <GalleryImage
-            imagePath={props.rootPath + "/" + file.name}
+            imagePath={combineRootPath(props.rootPath, file.name)}
             width={props.imageWidth}
             onClick={props.onImageClick}
             onLoad={props.onImageLoad}

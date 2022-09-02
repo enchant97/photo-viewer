@@ -14,3 +14,7 @@ export function createResourceURI(path: string, skipPathEncode: boolean = false,
   if (size) { url = url + "?s=" + size.toString() }
   return url;
 }
+
+export function combineRootPath(rootPath: string, filename: string) {
+  return rootPath + "/" + filename;
+}
