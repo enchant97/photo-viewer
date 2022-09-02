@@ -1,10 +1,10 @@
-import { createEffect, createSignal, Show } from "solid-js";
+import { createResource, createSignal, Show } from "solid-js";
 import { open } from '@tauri-apps/api/dialog';
 import { appDir } from '@tauri-apps/api/path';
 import { Link, useNavigate, useParams } from "solid-app-router";
 import { to_b64 } from "./core/base64";
 import styles from "./App.module.css";
-import { Directory, lsPath } from "./core/file_system";
+import { lsPath } from "./core/file_system";
 import Gallery from "./components/Gallery";
 import { createResourceURI } from "./core/helpers";
 
@@ -20,25 +20,30 @@ export function SingleImage() {
   );
 }
 
+async function refreshDirContents(rootPath: string | undefined) {
+  if (rootPath) { return await lsPath(rootPath) }
+}
+
+async function showDirectoryDialog() {
+  let selected = await open({
+    directory: true,
+    multiple: false,
+    defaultPath: await appDir(),
+  });
+  if (!Array.isArray(selected) && selected !== null) {
+    return selected;
+  }
+  return ""
+}
+
 function App() {
   let navigate = useNavigate();
   let [rootPath, setRootPath] = createSignal("");
   let [columnCount, setColumnCount] = createSignal<number>(3);
-  let [dirContents, setDirContents] = createSignal<Directory>();
-
-  const refreshGrid = async (rootPath: string) => {
-    setDirContents(await lsPath(rootPath));
-  }
+  let [dirContents] = createResource(rootPath, refreshDirContents);
 
   const handleDirPickClick = async () => {
-    let selected = await open({
-      directory: true,
-      multiple: false,
-      defaultPath: await appDir(),
-    });
-    if (!Array.isArray(selected) && selected !== null) {
-      setRootPath(selected);
-    }
+    setRootPath(await showDirectoryDialog())
   }
 
   const handleColumnCountChange = (event: any) => {
@@ -49,20 +54,15 @@ function App() {
     navigate("/single/" + to_b64(imagePath));
   }
 
-  createEffect(async () => {
-    let newRootPath = rootPath();
-    if (newRootPath) { await refreshGrid(newRootPath) }
-  })
-
   return (
     <>
       <div class={styles.header}>
         <h1>Photo Viewer</h1>
-        <button onClick={() => handleDirPickClick()}>Pick Folder</button>
+        <button onClick={handleDirPickClick}>Pick Folder</button>
         <p>{rootPath}</p>
       </div>
       <div class={styles.main}>
-        <Show when={rootPath() !== ""}>
+        <Show when={rootPath()}>
           <Gallery
             rootPath={rootPath()}
             columnsPerRow={columnCount()}
