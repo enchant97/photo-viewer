@@ -39,8 +39,7 @@ mod thumbnail_magick {
         wand.read_image(file_path.as_os_str().to_str().unwrap())
             .unwrap();
         wand.thumbnail_image(new_size, new_size);
-        let blob = wand.write_image_blob("jpeg").unwrap();
-        blob
+        wand.write_image_blob("jpeg").unwrap()
     }
 }
 

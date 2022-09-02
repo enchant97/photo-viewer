@@ -16,7 +16,7 @@ use url::Url;
 mod thumbnail;
 use thumbnail::create_img_thumbnail;
 
-static SUPPORTED_EXT: &'static [&str] = &["jpeg", "jpg", "png"];
+static SUPPORTED_EXT: &[&str] = &["jpeg", "jpg", "png"];
 
 #[derive(Debug, Serialize)]
 struct File {
