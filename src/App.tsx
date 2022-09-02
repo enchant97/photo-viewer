@@ -43,7 +43,8 @@ function App() {
   let [dirContents] = createResource(rootPath, refreshDirContents);
 
   const handleDirPickClick = async () => {
-    setRootPath(await showDirectoryDialog())
+    let newDir = await showDirectoryDialog()
+    if (newDir) { setRootPath(newDir) }
   }
 
   const handleColumnCountChange = (event: any) => {
