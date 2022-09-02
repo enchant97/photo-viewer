@@ -19,9 +19,16 @@ const Gallery: Component<GalleryProps> = (props) => {
   let [imageWidth, setImageWidth] = createSignal("");
   let [fileContentsToShow, setFileContentsToShow] = createSignal<FsFile[]>([]);
   let [leftToLoad, setLeftToLoad] = createSignal(0);
+  let currentRootPath = props.rootPath;
   let currentFileIndex = 0;
 
   const handleLoadMoreContent = (isIntersecting: boolean) => {
+    if (props.rootPath !== currentRootPath) {
+      currentRootPath = props.rootPath;
+      setFileContentsToShow([])
+      currentFileIndex = 0
+      return;
+    }
     // only allow new images when all others have finished loading
     if (!isIntersecting || leftToLoad() !== 0) return;
     // the max number of files or default to 0 if none exist
