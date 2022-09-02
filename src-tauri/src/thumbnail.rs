@@ -1,3 +1,6 @@
+#[cfg(all(feature = "thumbnail_native", feature = "thumbnail_magick"))]
+compile_error!("cannot enable multiple thumbnail features");
+
 #[cfg(feature = "thumbnail_native")]
 mod thumbnail_native {
     use image::io::Reader as ImageReader;
@@ -44,12 +47,13 @@ mod thumbnail_magick {
 use std::path::PathBuf;
 
 /// Returns a JPEG thumbnail from given image path,
+/// if no thumbnail feature was selected will just return normal file
 #[allow(unused_variables)]
 pub fn create_img_thumbnail(file_path: PathBuf, new_size: u32) -> Vec<u8> {
-    #[cfg(all(feature = "thumbnail_native", feature = "thumbnail_magick"))]
-    compile_error!("cannot enable multiple thumbnail features");
     #[cfg(feature = "thumbnail_native")]
     return thumbnail_native::create_img_thumbnail(file_path, new_size);
     #[cfg(feature = "thumbnail_magick")]
     return thumbnail_magick::create_img_thumbnail(file_path, new_size);
+    #[cfg(not(any(feature = "thumbnail_native", feature = "thumbnail_magick")))]
+    return std::fs::read(file_path).unwrap();
 }

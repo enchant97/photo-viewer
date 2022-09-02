@@ -22,7 +22,7 @@ magick_rust = { version = "0.16", optional = true }
 
 [features]
 # when `tauri dev` runs it is executed with `cargo run --no-default-features` if `devPath` is an URL
-default = [ "custom-protocol", "thumbnail_magick" ]
+default = [ "custom-protocol" ]
 # DO NOT remove this, used used for production builds where `devPath` points to the filesystem
 custom-protocol = [ "tauri/custom-protocol" ]
 # Supported image thumbnail libaries,
