@@ -15,4 +15,15 @@
     aspect-ratio: 4/3;
     object-fit: cover;
     border-radius: 12px;
+    animation: fade-in 1s;
+    background-color: #555555;
+}
+
+@keyframes fade-in {
+    from {
+        opacity:0;
+    }
+    to {
+        opacity:1;
+    }
 }
